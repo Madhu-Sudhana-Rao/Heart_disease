@@ -1,21 +1,21 @@
 import pickle
-
-from flask import Flask, render_template, request, jsonify
+import os
 import numpy as np
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# Load the trained model
-try:
-    model = pickle.load(open('heart.pkl', 'rb'))
-except FileNotFoundError:
-    model = None  # Handle case where model is not available
+MODEL_PATH = os.path.join(os.getcwd(), "heart.pkl")
 
+if os.path.exists(MODEL_PATH):
+    with open(MODEL_PATH, "rb") as file:
+        model = pickle.load(file)
+else:
+    model = None
 
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 @app.route('/Predict', methods=['POST'])
 def predict():
@@ -41,13 +41,12 @@ def predict():
             prediction = model.predict(input_data)[0]
             result = 'Heart Disease Detected' if prediction == 1 else 'No Heart Disease Detected'
         else:
-            result = 'Model Not Available'
+            result = 'Model Not Available. Please upload the trained model.'
 
     except Exception as e:
         result = f'Error: {str(e)}'
 
     return render_template('index.html', prediction=result)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
